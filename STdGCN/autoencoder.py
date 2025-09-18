@@ -47,12 +47,15 @@ def auto_train(model, epoch_n, loss_fn, optimizer, data, cpu_num=-1, device='GPU
         if torch.cuda.is_available():
             model = model.cuda()
             data = data.cuda()
+        elif torch.mps.is_available():
+            model = model.mps()
+            data = data.mps()
 
     for epoch in range(epoch_n):
-        try:
+        if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        except:
-            pass
+        elif torch.mps.is_available():
+            torch.mps.empty_cache()
         
         train_cost = 0       
             
@@ -64,7 +67,10 @@ def auto_train(model, epoch_n, loss_fn, optimizer, data, cpu_num=-1, device='GPU
         loss.backward()
         optimizer.step()
     
-    torch.cuda.empty_cache()
-    
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    elif torch.mps.is_available():
+        torch.mps.empty_cache()
+
     return en.cpu()
 
