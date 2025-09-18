@@ -220,6 +220,45 @@ def pseudo_spot_generation(sc_exp,
     return pseudo_spots
 
 
+def limit_cell_types_per_spot(probabilities, max_cell_types):
+    """Restrict probabilities so each spot has at most ``max_cell_types`` entries."""
+
+    if max_cell_types is None or max_cell_types <= 0:
+        return probabilities
+
+    if isinstance(probabilities, torch.Tensor):
+        if max_cell_types >= probabilities.shape[1]:
+            return probabilities
+
+        probs = probabilities.clone()
+        _, top_indices = torch.topk(probs, k=max_cell_types, dim=1)
+        mask = torch.zeros_like(probs)
+        mask.scatter_(1, top_indices, 1)
+        filtered = probs * mask
+        row_sums = filtered.sum(dim=1, keepdim=True)
+        zero_row_mask = row_sums.squeeze(-1) == 0
+        if torch.any(~zero_row_mask):
+            filtered[~zero_row_mask] = filtered[~zero_row_mask] / row_sums[~zero_row_mask]
+        if torch.any(zero_row_mask):
+            filtered[zero_row_mask] = probs[zero_row_mask]
+        return filtered
+
+    if isinstance(probabilities, np.ndarray):
+        if max_cell_types >= probabilities.shape[1]:
+            return probabilities
+
+        probs = probabilities.copy()
+        filtered = np.zeros_like(probs)
+        row_indices = np.arange(probs.shape[0])[:, None]
+        top_indices = np.argpartition(probs, -max_cell_types, axis=1)[:, -max_cell_types:]
+        filtered[row_indices, top_indices] = probs[row_indices, top_indices]
+        row_sums = filtered.sum(axis=1, keepdims=True)
+        non_zero_rows = row_sums[:, 0] > 0
+        filtered[non_zero_rows] = filtered[non_zero_rows] / row_sums[non_zero_rows]
+        filtered[~non_zero_rows] = probs[~non_zero_rows]
+        return filtered
+
+    raise TypeError("probabilities must be a torch.Tensor or np.ndarray")
 
 def data_integration(real, 
                      pseudo, 
