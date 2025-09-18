@@ -47,10 +47,10 @@ def plot_frac_results(predict, cell_type_list, coordinates, file_name=None, poin
         str_len = max(str_len, len(item))
     extend_region = str_len/15 + 3
     
-    fig, ax = plt.subplots(figsize=(len(coordinates['coor_X'].unique())*point_size*size_coefficient+extend_region, len(coordinates['coor_Y'].unique())*point_size*size_coefficient))
+    fig, ax = plt.subplots(figsize=(len(coordinates['coor_Y'].unique())*point_size*size_coefficient+extend_region, len(coordinates['coor_X'].unique())*point_size*size_coefficient))
     
     for i in tqdm(range(predict.shape[0]), desc="Plotting pie plots:"):
-        ax = draw_pie(predict[i], coordinates['coor_X'].values[i], coordinates['coor_Y'].values[i], 
+        ax = draw_pie(predict[i], coordinates['coor_Y'].values[i], coordinates['coor_X'].values[i], 
                                               size=point_size, ax=ax, colors=colors)
     
     
@@ -79,9 +79,9 @@ def plot_scatter_by_type(predict, cell_type_list, coordinates, point_size=400, s
     
     for i in tqdm(range(len(cell_type_list)), desc="Plotting cell type scatter plot:"):
         
-        fig, ax = plt.subplots(figsize=(len(coordinates['coor_X'].unique())*point_size*size_coefficient+1, len(coordinates['coor_Y'].unique())*point_size*size_coefficient))
-        cm = plt.cm.get_cmap('Reds')
-        ax = plt.scatter(coordinates['coor_X'], coordinates['coor_Y'], s=point_size, vmin=0, vmax=1, c=predict[:, i], cmap=cm)
+        fig, ax = plt.subplots(figsize=(len(coordinates['coor_Y'].unique())*point_size*size_coefficient+1, len(coordinates['coor_X'].unique())*point_size*size_coefficient))
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        ax = plt.scatter(coordinates['coor_Y'], coordinates['coor_X'], s=point_size, vmin=0, vmax=1, c=predict[:, i], cmap=cm)
 
         cbar = plt.colorbar(ax, fraction=0.05)
         labelsize = max(predict.shape[0]/100, 10)
@@ -90,8 +90,8 @@ def plot_scatter_by_type(predict, cell_type_list, coordinates, point_size=400, s
         plt.axis("equal")
         plt.xticks([])
         plt.yticks([])
-        plt.xlim(coordinates['coor_X'].min()-0.5, coordinates['coor_X'].max()+0.5)
-        plt.ylim(coordinates['coor_Y'].min()-0.5, coordinates['coor_Y'].max()+0.5)
+        plt.xlim(coordinates['coor_Y'].min()-0.5, coordinates['coor_Y'].max()+0.5)
+        plt.ylim(coordinates['coor_X'].min()-0.5, coordinates['coor_X'].max()+0.5)
         plt.tight_layout()
         if file_path != None:
             name = cell_type_list[i].replace('/', '_')
