@@ -329,10 +329,10 @@ def run_STdGCN(paths,
 
     ST_adata_filter_norm.obsm['predict_result'] = pred_probs_np
 
-    try:
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    except:
-        pass
+    elif torch.mps.is_available():
+        torch.mps.empty_cache()
     return (ST_adata_filter_norm, sc_adata)
 
 

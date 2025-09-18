@@ -171,7 +171,10 @@ def conGCN_train(model,
     else:
         if torch.cuda.is_available():
             device = torch.device("cuda")
-            print('Use GPU as device.')
+            print('Use GPU/CUDA as device.')
+        elif torch.mps.is_available():
+            device = torch.device("mps")
+            print('Use GPU/MPS as device.')
         else:
             device = torch.device("cpu")
             print('Use CPU as device.')
@@ -184,9 +187,13 @@ def conGCN_train(model,
 
     model = model.to(device)
     adjs = [adj.to(device) for adj in adjs]
+    if device.type == "mps":
+        feature = feature.to(torch.float32)
     feature = feature.to(device)
+    if device.type == "mps":
+        label = label.to(torch.float32)
     label = label.to(device)
-    
+
     time_open = time.time()
 
     train_idx = range(int(train_valid_len*train_valid_ratio))
@@ -197,11 +204,11 @@ def conGCN_train(model,
     loss = []
     para_list = []
     for epoch in range(epoch_n):
-        try:
+        if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        except:
-            pass
-            
+        elif torch.mps.is_available():
+            torch.mps.empty_cache()
+
         optimizer.zero_grad()
         output1, paras = model(feature.float(), adjs)
         if max_cell_types_in_spot is not None and max_cell_types_in_spot > 0:
@@ -233,8 +240,9 @@ def conGCN_train(model,
             para_list[-1][i] = copy.deepcopy(para_list[-1][i])
         
         if early_stopping_patience > 0:
-            if torch.round(loss_val1, decimals=4) < best_val:
-                best_val = torch.round(loss_val1, decimals=4)
+            v = torch.round(loss_val1) #, decimals=4)
+            if  v < best_val:
+                best_val = v
                 best_paras = paras.copy()
                 best_loss = loss.copy()
                 clip = 1
@@ -267,6 +275,9 @@ def conGCN_train(model,
         print("Test loss= {:.4f}".format(loss_test1.item()), end = '\t')
     print('time: {:.4f}s'.format(time.time() - time_open))
     
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    elif torch.mps.is_available():
+        torch.mps.empty_cache()
         
     return output1.cpu(), loss, model.cpu()
