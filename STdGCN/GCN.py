@@ -10,6 +10,8 @@ from torch.nn.modules.module import Module
 import torch.nn.functional as F
 import copy
 
+from .utils import limit_cell_types_per_spot
+
 
 
 class conGraphConvolutionlayer(Module):
@@ -159,7 +161,8 @@ def conGCN_train(model,
                  load_test_groundtruth = False,
                  print_epoch_step = 1,
                  cpu_num = -1,
-                 GCN_device = 'CPU'
+                 GCN_device = 'CPU',
+                 max_cell_types_in_spot = None
                 ):
     
     if GCN_device == 'CPU':
@@ -172,13 +175,13 @@ def conGCN_train(model,
         else:
             device = torch.device("cpu")
             print('Use CPU as device.')
-    
+
     if cpu_num == -1:
         cores = multiprocessing.cpu_count()
         torch.set_num_threads(cores)
     else:
         torch.set_num_threads(cpu_num)
-    
+
     model = model.to(device)
     adjs = [adj.to(device) for adj in adjs]
     feature = feature.to(device)
@@ -201,6 +204,11 @@ def conGCN_train(model,
             
         optimizer.zero_grad()
         output1, paras = model(feature.float(), adjs)
+        if max_cell_types_in_spot is not None and max_cell_types_in_spot > 0:
+            probs = torch.exp(output1)
+            probs = limit_cell_types_per_spot(probs, max_cell_types_in_spot)
+            probs = torch.clamp(probs, min=1e-12)
+            output1 = torch.log(probs)
         
         loss_train1 = loss_fn(output1[list(np.array(train_idx)+test_len)], label[list(np.array(train_idx)+test_len)].float())
         loss_val1 = loss_fn(output1[list(np.array(valid_idx)+test_len)], label[list(np.array(valid_idx)+test_len)].float())
