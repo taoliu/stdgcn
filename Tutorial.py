@@ -88,16 +88,15 @@ Parameters:
 'spot_num': [int]. The number of pseudo-spots.
 'min_cell_num_in_spot': [int]. The minimum number of cells in a pseudo-spot.
 'max_cell_num_in_spot': [int]. The maximum number of cells in a pseudo-spot.
-'generation_method': ['cell' or 'celltype']. STdGCN provides two pseudo-spot simulation methods. When 'generation_method'='cell', each cell is equally selected. When 
-                    'generation_method'='celltype', each cell type is equally selected. See manuscript for more details.
+'generation_method': ['cell' or 'celltype']. STdGCN provides two pseudo-spot simulation methods. When 'generation_method'='cell', each cell is equally selected. When 'generation_method'='celltype', each cell type is equally selected. See manuscript for more details.
 'max_cell_types_in_spot': [int]. When 'generation_method'='celltype', choose the maximum number of cell types in a pseudo-spot.
 '''
 pseudo_spot_simulation_paras = {
-    'spot_num': 5000,
+    'spot_num': 1000,
     'min_cell_num_in_spot': 8,
-    'max_cell_num_in_spot': 12,
+    'max_cell_num_in_spot': 10,
     'generation_method': 'celltype',
-    'max_cell_types_in_spot': 4,   
+    'max_cell_types_in_spot': 4,
 }
 
 
@@ -263,25 +262,43 @@ Parameters
 'n_jobs': [int]. Set the number of threads used for intraop parallelism on CPU. 'n_jobs=-1' represents using all CPUs.
 'GCN_device': ['GPU', 'CPU']. Select the device used to run GCN networks. 
 '''
-results =  run_STdGCN(paths,
-                      load_test_groundtruth = False,
-                      use_marker_genes = True,
-                      external_genes = False,
-                      find_marker_genes_paras = find_marker_genes_paras,
-                      generate_new_pseudo_spots = True, 
-                      pseudo_spot_simulation_paras = pseudo_spot_simulation_paras,
-                      data_normalization_paras = data_normalization_paras,
-                      integration_for_adj_paras = integration_for_adj_paras,
-                      inter_exp_adj_paras = inter_exp_adj_paras,
-                      spatial_adj_paras = spatial_adj_paras,
-                      real_intra_exp_adj_paras = real_intra_exp_adj_paras,
-                      pseudo_intra_exp_adj_paras = pseudo_intra_exp_adj_paras,
-                      integration_for_feature_paras = integration_for_feature_paras,
-                      GCN_paras = GCN_paras,
-                      fraction_pie_plot = True,
-                      cell_type_distribution_plot = True,
-                      n_jobs = 4,
-                      GCN_device = 'GPU'
-                     )
+(st_adata, sc_adata) =  run_STdGCN(paths,
+                                   load_test_groundtruth = False,
+                                   use_marker_genes = True,
+                                   external_genes = False,
+                                   find_marker_genes_paras = find_marker_genes_paras,
+                                   generate_new_pseudo_spots = True, 
+                                   pseudo_spot_simulation_paras = pseudo_spot_simulation_paras,
+                                   data_normalization_paras = data_normalization_paras,
+                                   integration_for_adj_paras = integration_for_adj_paras,
+                                   inter_exp_adj_paras = inter_exp_adj_paras,
+                                   spatial_adj_paras = spatial_adj_paras,
+                                   real_intra_exp_adj_paras = real_intra_exp_adj_paras,
+                                   pseudo_intra_exp_adj_paras = pseudo_intra_exp_adj_paras,
+                                   integration_for_feature_paras = integration_for_feature_paras,
+                                   GCN_paras = GCN_paras,
+                                   fraction_pie_plot = True,
+                                   cell_type_distribution_plot = True,
+                                   n_jobs = 4,
+                                   GCN_device = 'GPU'
+                                   )
 
-results.write_h5ad(paths['output_path']+'/results.h5ad')
+st_adata.write_h5ad(paths['output_path']+'/results.h5ad')
+
+
+import numpy as np
+from STdGCN.visualization import plot_frac_results, plot_scatter_by_type
+pred_use = np.round(st_adata.obsm['predict_result'], decimals=4)
+cell_type_list = sc_adata.obs['cell_type'].unique()
+coordinates = st_adata.obs[['coor_X', 'coor_Y']]
+
+plot_frac_results(pred_use, cell_type_list, coordinates,
+                  point_size=100,
+                  size_coefficient=0.0001,
+                  file_name=paths["output_path"]+'/predict_results_pie_plot.jpg',
+                  if_show=False)
+
+plot_scatter_by_type(pred_use, cell_type_list, coordinates,
+                     point_size=5,
+                     file_path=paths["output_path"],
+                     if_show=False)
