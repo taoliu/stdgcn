@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[1]:
 
 
 import os
@@ -9,6 +10,10 @@ import warnings
 warnings.filterwarnings("ignore")
 sys.path.append(os.getcwd())
 from STdGCN.STdGCN import run_STdGCN
+
+
+# In[2]:
+
 
 '''
 This module is used to provide the path of the loading data and saving data.
@@ -31,9 +36,11 @@ ST_ground_truth.tsv [optional]: The ground truth of ST data. The data should be 
 paths = {
     'sc_path': './data/sc_data',
     'ST_path': './data/ST_data',
-    'output_path': './output',
+    'output_path': './output/',
 }
 
+
+# In[3]:
 
 
 '''
@@ -66,19 +73,21 @@ find_marker_genes_paras = {
     'preprocess': True,
     'normalize': True,
     'log': True,
-    'highly_variable_genes': False,
-    'highly_variable_gene_num': None,
-    'regress_out': False,
-    'PCA_components': 30, 
-    'marker_gene_method': 'logreg',
-    'top_gene_per_type': 100,
+    'highly_variable_genes': True,
+    'highly_variable_gene_num': 1000,
+    'regress_out': True,
+    'PCA_components': 40, 
+    'marker_gene_method': 'wilcoxon',
+    'top_gene_per_type': 30,
     'filter_wilcoxon_marker_genes': True,
-    'pvals_adj_threshold': 0.10,
+    'pvals_adj_threshold': 0.05,
     'log_fold_change_threshold': 1,
     'min_within_group_fraction_threshold': None,
     'max_between_group_fraction_threshold': None,
 }
 
+
+# In[4]:
 
 
 '''
@@ -88,17 +97,20 @@ Parameters:
 'spot_num': [int]. The number of pseudo-spots.
 'min_cell_num_in_spot': [int]. The minimum number of cells in a pseudo-spot.
 'max_cell_num_in_spot': [int]. The maximum number of cells in a pseudo-spot.
-'generation_method': ['cell' or 'celltype']. STdGCN provides two pseudo-spot simulation methods. When 'generation_method'='cell', each cell is equally selected. When 'generation_method'='celltype', each cell type is equally selected. See manuscript for more details.
+'generation_method': ['cell' or 'celltype']. STdGCN provides two pseudo-spot simulation methods. When 'generation_method'='cell', each cell is equally selected. When 
+                    'generation_method'='celltype', each cell type is equally selected. See manuscript for more details.
 'max_cell_types_in_spot': [int]. When 'generation_method'='celltype', choose the maximum number of cell types in a pseudo-spot.
 '''
 pseudo_spot_simulation_paras = {
-    'spot_num': 1000,
-    'min_cell_num_in_spot': 8,
+    'spot_num': 4000,
+    'min_cell_num_in_spot': 1,
     'max_cell_num_in_spot': 10,
     'generation_method': 'celltype',
-    'max_cell_types_in_spot': 4,
+    'max_cell_types_in_spot': 4,   
 }
 
+
+# In[5]:
 
 
 '''
@@ -116,6 +128,8 @@ data_normalization_paras = {
 }
 
 
+# In[6]:
+
 
 '''
 This module is used to integrate the normalized real- and pseudo- spots together to construct the real-to-pseudo-spot link graph.
@@ -130,12 +144,14 @@ Parameters:
 'scale': [bool]. When 'batch_removal_method' is not 'scanorama', select whether you need to scale each gene to unit variance and zero mean.
 '''
 integration_for_adj_paras = {
-    'batch_removal_method': None, 
-    'dim': 30, 
+    'batch_removal_method': 'combat', 
+    'dim': 40, 
     'dimensionality_reduction_method': 'PCA',
     'scale': True,
 }
 
+
+# In[7]:
 
 
 '''
@@ -159,17 +175,19 @@ real_intra_exp_adj_paras = {
     'find_neighbor_method': 'MNN', 
     'dist_method': 'cosine',  
     'corr_dist_neighbors': 10,
-    'PCA_dimensionality_reduction': False,
-    'dim': 50,
+    'PCA_dimensionality_reduction': True,
+    'dim': 40,
 }
 pseudo_intra_exp_adj_paras = {
     'find_neighbor_method': 'MNN', 
     'dist_method': 'cosine', 
     'corr_dist_neighbors': 20,
-    'PCA_dimensionality_reduction': False,
-    'dim': 50,
+    'PCA_dimensionality_reduction': True,
+    'dim': 40,
 }
 
+
+# In[8]:
 
 
 '''
@@ -185,6 +203,8 @@ spatial_adj_paras = {
 }
 
 
+# In[9]:
+
 
 '''
 This module is used to integrate the normalized real- and pseudo- spots as the input feature for STdGCN.
@@ -199,12 +219,14 @@ Parameters:
 'scale': [bool]. When 'batch_removal_method' is not 'scanorama', select whether you need to scale each gene to unit variance and zero mean.
 '''
 integration_for_feature_paras = {
-    'batch_removal_method': None, 
-    'dimensionality_reduction_method': None, 
-    'dim': 80,
+    'batch_removal_method': 'combat', 
+    'dimensionality_reduction_method': "PCA", 
+    'dim': 40,
     'scale': True,
 }
 
+
+# In[10]:
 
 
 '''
@@ -231,7 +253,7 @@ GCN_paras = {
     'dim': 80,
     'common_hid_layers_num': 1,
     'fcnn_hid_layers_num': 1,
-    'dropout': 0,
+    'dropout': 0.01,
     'learning_rate_SGD': 2e-1,
     'weight_decay_SGD': 3e-4,
     'momentum': 0.9,
@@ -239,10 +261,12 @@ GCN_paras = {
     'nesterov': True,
     'early_stopping_patience': 20,
     'clip_grad_max_norm': 1,
+    #'LambdaLR_scheduler_coefficient': 0.997,
     'print_loss_epoch_step': 20,
 }
 
 
+# In[11]:
 
 
 '''
@@ -262,6 +286,7 @@ Parameters
 'n_jobs': [int]. Set the number of threads used for intraop parallelism on CPU. 'n_jobs=-1' represents using all CPUs.
 'GCN_device': ['GPU', 'CPU']. Select the device used to run GCN networks. 
 '''
+
 (st_adata, sc_adata) =  run_STdGCN(paths,
                                    load_test_groundtruth = False,
                                    use_marker_genes = True,
@@ -279,26 +304,52 @@ Parameters
                                    GCN_paras = GCN_paras,
                                    fraction_pie_plot = True,
                                    cell_type_distribution_plot = True,
-                                   n_jobs = 4,
+                                   n_jobs = 2,
                                    GCN_device = 'GPU'
                                    )
 
-st_adata.write_h5ad(paths['output_path']+'/results.h5ad')
+st_adata.write_h5ad(paths['output_path']+'/st_adata.h5ad')
+
+
+# In[12]:
 
 
 import numpy as np
 from STdGCN.visualization import plot_frac_results, plot_scatter_by_type
 pred_use = np.round(st_adata.obsm['predict_result'], decimals=4)
 cell_type_list = sc_adata.obs['cell_type'].unique()
-coordinates = st_adata.obs[['coor_X', 'coor_Y']]
-
+coordinates = st_adata.obs[['coor_Y', 'coor_X']]
+#color_dict = {"atrial_cm":"#2E133A",
+#              "ventricular_cm":"#FBE5E2",
+#              "endocardial_ec":"#AA0E19",
+#              "vascular_ec":"#89F77B",
+#              "epicardial":"#D5E856",
+#              "fibroblast-like":"#C7853C",
+#              "immune":"#5876E9",
+#              "blood":"#701B0A"
+#             }
 plot_frac_results(pred_use, cell_type_list, coordinates,
-                  point_size=100,
-                  size_coefficient=0.0001,
-                  file_name=paths["output_path"]+'/predict_results_pie_plot.jpg',
-                  if_show=False)
+                  point_size=45,
+                  file_name=paths["output_path"]+'/predict_results_pie_plot.jpg',            
+                  if_show=True,
+                  # color_dict=color_dict, 
+                  fig_height=36,
+                  fig_width=20)
+
+
+# In[13]:
+
 
 plot_scatter_by_type(pred_use, cell_type_list, coordinates,
-                     point_size=5,
+                     point_size=20,
                      file_path=paths["output_path"],
-                     if_show=False)
+                     if_show=True,
+                     fig_height=36,
+                     fig_width=20)
+
+
+# In[ ]:
+
+
+
+
