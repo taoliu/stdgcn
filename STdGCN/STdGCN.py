@@ -70,7 +70,12 @@ def run_STdGCN(paths,
     else:
         selected_genes = list(sc_adata.var.index.values)
 
+    # for hard coding a gene list
+    # selected_genes=["Sln","Myl2","Npr3","Foxc1","Pdgfra","C1qa","Pecam1","WT1","Hba-a1","Tnnt2","Myh11","MKi67"]
     print("{} genes have been selected as marker genes.".format(len(selected_genes)))
+    print(selected_genes)
+    # print("As reference, here is the list of marker genes")
+    # print(cell_type_marker_genes)
     
     
 
@@ -175,6 +180,7 @@ def run_STdGCN(paths,
                                      dist_method=real_intra_exp_adj_paras['dist_method'],
                                      PCA_dimensionality_reduction=real_intra_exp_adj_paras['PCA_dimensionality_reduction'],
                                      corr_dist_neighbors=real_intra_exp_adj_paras['corr_dist_neighbors'],
+                                     dim=real_intra_exp_adj_paras['dim'],
                                     )
 
     A_pseudo_intra_exp = intra_exp_adj(pseudo_adata_norm, 
@@ -182,6 +188,7 @@ def run_STdGCN(paths,
                                        dist_method=pseudo_intra_exp_adj_paras['dist_method'],
                                        PCA_dimensionality_reduction=pseudo_intra_exp_adj_paras['PCA_dimensionality_reduction'],
                                        corr_dist_neighbors=pseudo_intra_exp_adj_paras['corr_dist_neighbors'],
+                                       dim=pseudo_intra_exp_adj_paras['dim'],
                                       )
     
     real_num = ST_adata_filter.shape[0]
